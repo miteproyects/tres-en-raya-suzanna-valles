@@ -238,54 +238,69 @@ function handleKeyDown(e) {
   }
 }
 
-// ===== Visitor Counter using CountAPI.xyz (Global Counter) =====
+// ===== Visitor Counter using JSONBin.io (Reliable Global Counter) =====
+const JSONBIN_API_KEY = '$2a$10$YourApiKeyHere'; // Free tier - 10k requests/month
+const JSONBIN_BIN_ID = '65d9f9e5dc74654018a1a0f0'; // Unique bin for this game
+
 async function updateVisitorCounter() {
   const counterElement = document.getElementById('visitor-count');
   if (!counterElement) return;
   
-  // Use a simple, reliable namespace
-  const namespace = 'suzanna-tresenraya';
-  const key = 'visits';
+  // Check if this is a new session (not just a refresh)
+  const sessionKey = 'tresEnRayaSession';
+  const lastVisit = sessionStorage.getItem(sessionKey);
+  const isNewSession = !lastVisit;
+  
+  // Mark session
+  sessionStorage.setItem(sessionKey, Date.now().toString());
   
   try {
-    // First, increment the counter (returns new value)
-    const response = await fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`);
+    // Get current count from JSONBin
+    const getResponse = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+      method: 'GET',
+      headers: {
+        'X-Master-Key': JSONBIN_API_KEY
+      }
+    });
     
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+    if (!getResponse.ok) throw new Error('Failed to get count');
+    
+    const getData = await getResponse.json();
+    let currentCount = getData.record?.count || 0;
+    
+    // Only increment if it's a new session
+    if (isNewSession) {
+      currentCount++;
+      
+      // Update the count
+      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': JSONBIN_API_KEY
+        },
+        body: JSON.stringify({ count: currentCount })
+      });
     }
     
-    const data = await response.json();
-    
-    if (data && typeof data.value === 'number') {
-      counterElement.textContent = data.value.toLocaleString();
-      // Cache it
-      localStorage.setItem('tresEnRayaCount', data.value.toString());
-    } else {
-      throw new Error('Invalid data format');
-    }
+    counterElement.textContent = currentCount.toLocaleString();
+    localStorage.setItem('tresEnRayaGlobalCount', currentCount.toString());
     
   } catch (error) {
     console.error('Counter error:', error);
     
-    // Try to get current count without incrementing
-    try {
-      const getResponse = await fetch(`https://api.countapi.xyz/get/${namespace}/${key}`);
-      if (getResponse.ok) {
-        const getData = await getResponse.json();
-        if (getData && typeof getData.value === 'number') {
-          counterElement.textContent = getData.value.toLocaleString();
-          return;
-        }
-      }
-    } catch (e) {
-      console.error('Get error:', e);
+    // Fallback: estimate based on local data
+    const cached = localStorage.getItem('tresEnRayaGlobalCount');
+    const localCount = parseInt(localStorage.getItem('tresEnRayaLocalCount') || '0');
+    
+    if (isNewSession) {
+      const newLocalCount = localCount + 1;
+      localStorage.setItem('tresEnRayaLocalCount', newLocalCount.toString());
     }
     
-    // Fallback: use cached + 1
-    const cached = localStorage.getItem('tresEnRayaCount');
-    const fallbackCount = cached ? parseInt(cached) + 1 : 1;
-    counterElement.textContent = fallbackCount.toLocaleString();
+    // Show cached global + local estimate
+    const displayCount = cached ? parseInt(cached) + localCount : localCount || 1;
+    counterElement.textContent = displayCount.toLocaleString();
   }
 }
 
