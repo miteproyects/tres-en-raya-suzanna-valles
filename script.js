@@ -7,8 +7,8 @@
 
 // ===== Constants =====
 const PLAYERS = {
-  X: { id: 'x', name: 'Good Lavanda', icon: 'iconp1.jpg', color: 'good' },
-  O: { id: 'o', name: 'Bad Pill', icon: 'iconp2.jpg', color: 'bad' }
+  X: { id: 'x', name: 'Lavanda', icon: 'Good%20Lavanda.jpg', color: 'good' },
+  O: { id: 'o', name: 'Píldorín', icon: 'Bad%20Pill.jpg', color: 'bad' }
 };
 
 const WIN_COMBINATIONS = [
