@@ -238,51 +238,55 @@ function handleKeyDown(e) {
   }
 }
 
-// ===== Visitor Counter using Hit Counter (Image-based, works globally) =====
-function updateVisitorCounter() {
+// ===== Visitor Counter using CountAPI.xyz (Global Counter) =====
+async function updateVisitorCounter() {
   const counterElement = document.getElementById('visitor-count');
   if (!counterElement) return;
   
-  // Use hits.seeyoufarm.com via image tag (bypasses CORS issues)
-  const pageUrl = encodeURIComponent('miteproyects.github.io/tres-en-raya');
-  const counterUrl = `https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=${pageUrl}&count_bg=%237B5AA6&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=Visitas&edge_flat=false`;
+  // Use a simple, reliable namespace
+  const namespace = 'suzanna-tresenraya';
+  const key = 'visits';
   
-  // Create an image to trigger the counter
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  
-  img.onload = function() {
-    // The image loaded - now fetch the SVG to extract the count
-    fetch(counterUrl, { mode: 'cors', cache: 'no-store' })
-      .then(response => response.text())
-      .then(svgText => {
-        // Extract number from SVG content
-        const match = svgText.match(/>(\d+)</);
-        if (match && match[1]) {
-          const count = parseInt(match[1]);
-          counterElement.textContent = count.toLocaleString();
-          localStorage.setItem('tresEnRayaVisitorCount', count.toString());
+  try {
+    // First, increment the counter (returns new value)
+    const response = await fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data && typeof data.value === 'number') {
+      counterElement.textContent = data.value.toLocaleString();
+      // Cache it
+      localStorage.setItem('tresEnRayaCount', data.value.toString());
+    } else {
+      throw new Error('Invalid data format');
+    }
+    
+  } catch (error) {
+    console.error('Counter error:', error);
+    
+    // Try to get current count without incrementing
+    try {
+      const getResponse = await fetch(`https://api.countapi.xyz/get/${namespace}/${key}`);
+      if (getResponse.ok) {
+        const getData = await getResponse.json();
+        if (getData && typeof getData.value === 'number') {
+          counterElement.textContent = getData.value.toLocaleString();
+          return;
         }
-      })
-      .catch(() => {
-        // If we can't parse, at least we know the hit was registered
-        const cached = localStorage.getItem('tresEnRayaVisitorCount');
-        const displayCount = cached ? parseInt(cached) + 1 : 1;
-        counterElement.textContent = displayCount.toLocaleString();
-        localStorage.setItem('tresEnRayaVisitorCount', displayCount.toString());
-      });
-  };
-  
-  img.onerror = function() {
-    // Image failed to load - use fallback
-    const cached = localStorage.getItem('tresEnRayaVisitorCount');
-    const displayCount = cached ? parseInt(cached) + 1 : 1;
-    counterElement.textContent = displayCount.toLocaleString();
-    localStorage.setItem('tresEnRayaVisitorCount', displayCount.toString());
-  };
-  
-  // Trigger the counter
-  img.src = counterUrl;
+      }
+    } catch (e) {
+      console.error('Get error:', e);
+    }
+    
+    // Fallback: use cached + 1
+    const cached = localStorage.getItem('tresEnRayaCount');
+    const fallbackCount = cached ? parseInt(cached) + 1 : 1;
+    counterElement.textContent = fallbackCount.toLocaleString();
+  }
 }
 
 // ===== Start Game =====
