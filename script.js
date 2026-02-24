@@ -238,61 +238,57 @@ function handleKeyDown(e) {
   }
 }
 
-// ===== Visitor Counter using CountAPI (Global Counter) =====
+// ===== Visitor Counter using counterapi.dev (Reliable Global Counter) =====
 async function updateVisitorCounter() {
   const counterElement = document.getElementById('visitor-count');
   if (!counterElement) return;
   
-  const namespace = 'tresenraya-doterra-game';
-  const key = 'global-visitors-v1';
+  // Use counterapi.dev - more reliable free counter
+  const counterName = 'tresenraya-suzanna-valles';
   
   try {
-    // Step 1: Increment the counter (this returns the NEW count after incrementing)
-    const hitResponse = await fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`, {
-      method: 'GET',
+    // Step 1: Try to increment the counter
+    // counterapi.dev automatically creates the counter on first hit
+    const hitResponse = await fetch(`https://api.counterapi.dev/v1/${counterName}/up`, {
+      method: 'POST',
       headers: {
-        'Accept': 'application/json'
+        'Content-Type': 'application/json'
       }
     });
     
-    if (!hitResponse.ok) {
-      throw new Error(`HTTP error! status: ${hitResponse.status}`);
+    if (hitResponse.ok) {
+      const hitData = await hitResponse.json();
+      if (hitData && typeof hitData.count === 'number') {
+        counterElement.textContent = hitData.count.toLocaleString();
+        localStorage.setItem('cachedVisitorCount', hitData.count.toString());
+        return;
+      }
     }
     
-    const hitData = await hitResponse.json();
-    
-    if (hitData && typeof hitData.value === 'number') {
-      // Display the current count (which is already incremented)
-      counterElement.textContent = hitData.value.toLocaleString();
-      
-      // Cache for display if API fails later
-      localStorage.setItem('cachedVisitorCount', hitData.value.toString());
-    } else {
-      throw new Error('Invalid response format');
-    }
+    // If POST fails, try GET to at least show current count
+    throw new Error('Hit failed, trying GET');
     
   } catch (error) {
-    console.error('Counter error:', error);
+    console.log('Counter POST error:', error);
     
-    // Try to get current count without incrementing
+    // Try GET to show current count without incrementing
     try {
-      const getResponse = await fetch(`https://api.countapi.xyz/get/${namespace}/${key}`);
+      const getResponse = await fetch(`https://api.counterapi.dev/v1/${counterName}`);
       if (getResponse.ok) {
         const getData = await getResponse.json();
-        if (getData && typeof getData.value === 'number') {
-          counterElement.textContent = getData.value.toLocaleString();
+        if (getData && typeof getData.count === 'number') {
+          counterElement.textContent = getData.count.toLocaleString();
           return;
         }
       }
     } catch (e) {
-      console.error('Get count fallback failed:', e);
+      console.log('Counter GET error:', e);
     }
     
-    // Ultimate fallback: show cached + 1
+    // Ultimate fallback
     const cached = localStorage.getItem('cachedVisitorCount');
     if (cached) {
-      const displayCount = parseInt(cached) + 1;
-      counterElement.textContent = displayCount.toLocaleString();
+      counterElement.textContent = parseInt(cached).toLocaleString();
     } else {
       counterElement.textContent = '1';
     }
