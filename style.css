@@ -580,35 +580,6 @@ button {
   letter-spacing: 0.02em;
 }
 
-/* ===== Visitor Counter ===== */
-.visitor-counter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-md);
-  background: linear-gradient(135deg, rgba(123, 90, 166, 0.1), rgba(90, 154, 110, 0.1));
-  border-radius: var(--radius-full);
-  width: fit-content;
-  margin: var(--space-sm) auto 0;
-  border: 1px solid rgba(123, 90, 166, 0.2);
-}
-
-.counter-label {
-  font-size: 0.7rem;
-  color: var(--color-text-muted);
-  font-weight: 500;
-}
-
-.counter-value {
-  font-family: var(--font-heading);
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  min-width: 30px;
-  text-align: center;
-}
-
 /* ===== Modal ===== */
 .modal {
   position: fixed;
