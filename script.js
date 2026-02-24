@@ -243,9 +243,9 @@ function updateVisitorCounter() {
   const counterElement = document.getElementById('visitor-count');
   if (!counterElement) return;
   
-  // Use CountAPI for real visitor counting
+  // Use CountAPI for real visitor counting - reset to 0 with new key
   const namespace = 'tres-en-raya-suzanna-valles';
-  const key = 'visitors';
+  const key = 'visitors-v2';
   
   // First, try to get the current count
   fetch(`https://api.countapi.xyz/get/${namespace}/${key}`)
@@ -258,7 +258,7 @@ function updateVisitorCounter() {
     })
     .catch(error => {
       console.log('Counter error:', error);
-      counterElement.textContent = '---';
+      counterElement.textContent = '0';
     });
 }
 
