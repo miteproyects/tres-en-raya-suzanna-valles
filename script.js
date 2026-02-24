@@ -243,9 +243,9 @@ function updateVisitorCounter() {
   const counterElement = document.getElementById('visitor-count');
   if (!counterElement) return;
   
-  // Use CountAPI for real visitor counting - reset to 0 with new key
-  const namespace = 'tres-en-raya-suzanna-valles';
-  const key = 'visitors-v2';
+  // Use CountAPI with completely new namespace to start from 0
+  const namespace = 'suzanna-valles-game';
+  const key = 'total-visits';
   
   // First, try to get the current count
   fetch(`https://api.countapi.xyz/get/${namespace}/${key}`)
